@@ -1,15 +1,3 @@
-/*
- * Copyright 2017 IBM Corp. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- */
 package com.ibm.watson.developer_cloud.android.myapplication;
 
 import android.content.Intent;
@@ -21,11 +9,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.widget.Adapter;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RadioGroup;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -49,6 +42,7 @@ import com.ibm.watson.developer_cloud.text_to_speech.v1.model.SynthesizeOptions;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
   private final String TAG = "MainActivity";
@@ -64,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
   private TextToSpeech textService;
   private LanguageTranslator translationService;
   private String selectedTargetLanguage = Language.SPANISH;
+  private String voiceLang = SynthesizeOptions.Voice.ES_ES_ENRIQUEVOICE;
 
   private StreamPlayer player = new StreamPlayer();
 
@@ -87,31 +82,31 @@ public class MainActivity extends AppCompatActivity {
     textService = initTextToSpeechService();
     translationService = initLanguageTranslatorService();
 
-    RadioGroup targetLanguage = findViewById(R.id.target_language);
+    Spinner targetLanguage = findViewById(R.id.target_language);
     input = findViewById(R.id.input);
     mic = findViewById(R.id.mic);
     translate = findViewById(R.id.translate);
     play = findViewById(R.id.play);
     translatedText = findViewById(R.id.translated_text);
-    Button gallery = findViewById(R.id.gallery_button);
-    Button camera = findViewById(R.id.camera_button);
+    ImageButton gallery = findViewById(R.id.gallery_button);
+    ImageButton camera = findViewById(R.id.camera_button);
     loadedImage = findViewById(R.id.loaded_image);
 
-    targetLanguage.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-      @Override
-      public void onCheckedChanged(RadioGroup group, int checkedId) {
-        switch (checkedId) {
-          case R.id.spanish:
-            selectedTargetLanguage = Language.SPANISH;
-            break;
-          case R.id.french:
-            selectedTargetLanguage = Language.FRENCH;
-            break;
-          case R.id.italian:
-            selectedTargetLanguage = Language.ITALIAN;
-            break;
+    String[] langs = getResources().getStringArray(R.array.array_languages);
+      Arrays.sort(langs);
+    final SpinnerAdapter spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, langs);
+    targetLanguage.setAdapter(spinnerAdapter);
+
+    targetLanguage.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        @Override
+        public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+            selectedTargetLanguage = translateLanguage(spinnerAdapter.getItem(i).toString());
         }
-      }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> adapterView) {
+
+        }
     });
 
     input.addTextChangedListener(new EmptyTextWatcher() {
@@ -205,6 +200,56 @@ public class MainActivity extends AppCompatActivity {
         cameraHelper.dispatchTakePictureIntent();
       }
     });
+  }
+
+  private String translateLanguage(String fullName)
+  {
+      switch(fullName.toUpperCase())
+      {
+          case "ENGLISH":
+              voiceLang = SynthesizeOptions.Voice.EN_US_LISAVOICE;
+              return Language.ENGLISH;
+
+          case "ARABIC":
+              return Language.ARABIC;
+
+          case "CHINESE":
+              return Language.CHINESE;
+
+          case "CZECH":
+              return Language.CZECH;
+
+          case "DUTCH":
+              return Language.DUTCH;
+
+          case "FRENCH":
+              voiceLang = SynthesizeOptions.Voice.FR_FR_RENEEVOICE;
+              return Language.FRENCH;
+
+          case "GERMAN":
+              voiceLang = SynthesizeOptions.Voice.DE_DE_DIETERVOICE;
+              return Language.GERMAN;
+
+          case "ITALIAN":
+              voiceLang = SynthesizeOptions.Voice.IT_IT_FRANCESCAVOICE;
+             return Language.ITALIAN;
+
+          case "JAPANESE":
+              voiceLang = SynthesizeOptions.Voice.JA_JP_EMIVOICE;
+              return Language.JAPANESE;
+
+          case "KOREAN":
+              return Language.KOREAN;
+
+          case "PORTUGUESE":
+              voiceLang = SynthesizeOptions.Voice.PT_BR_ISABELAVOICE;
+              return Language.PORTUGUESE;
+
+          case "SPANISH":
+              voiceLang = SynthesizeOptions.Voice.ES_ES_LAURAVOICE;
+              return Language.SPANISH;
+      }
+      return null;
   }
 
 
@@ -355,7 +400,7 @@ public class MainActivity extends AppCompatActivity {
     protected String doInBackground(String... params) {
       SynthesizeOptions synthesizeOptions = new SynthesizeOptions.Builder()
               .text(params[0])
-              .voice(SynthesizeOptions.Voice.EN_US_LISAVOICE)
+              .voice(voiceLang)
               .accept(SynthesizeOptions.Accept.AUDIO_WAV)
               .build();
       player.playStream(textService.synthesize(synthesizeOptions).execute());

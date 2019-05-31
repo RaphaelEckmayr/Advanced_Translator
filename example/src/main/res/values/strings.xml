@@ -9,4 +9,19 @@
   <string name="italian">Italian</string>
   <string name="microphone">Microphone</string>
   <string name="play">Play</string>
+  <string-array name="array_languages">
+    <item>English</item>
+    <item>Arabic</item>
+    <item>Chinese</item>
+    <item>Czech</item>
+    <item>Dutch</item>
+    <item>French</item>
+    <item>German</item>
+    <item>Italian</item>
+    <item>Japanese</item>
+    <item>Korean</item>
+    <item>Portuguese</item>
+    <item>Spanish</item>
+  </string-array>
+
 </resources>

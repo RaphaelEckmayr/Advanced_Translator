@@ -11,40 +11,13 @@
     android:orientation="vertical"
     tools:context="com.ibm.watson.developer_cloud.android.myapplication.MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <Spinner
+        android:id="@+id/target_language"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/target_language"
-        android:textStyle="bold" />
+        android:spinnerMode="dropdown" />
 
-  <RadioGroup
-      android:id="@+id/target_language"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:orientation="horizontal">
-
-      <RadioButton
-          android:id="@+id/spanish"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/spanish"
-          android:checked="true" />
-
-      <RadioButton
-          android:id="@+id/french"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/french" />
-
-      <RadioButton
-          android:id="@+id/italian"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/italian" />
-
-  </RadioGroup>
-
-  <LinearLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -75,28 +48,21 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <ImageButton
+      <ImageButton
             android:id="@+id/play"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_play"
             android:contentDescription="@string/play" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:text="@string/translation_label"
-            android:textStyle="bold" />
+      <TextView
+          android:id="@+id/translated_text"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent" />
 
-    </LinearLayout>
+  </LinearLayout>
 
-    <TextView
-        android:id="@+id/translated_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-  <LinearLayout
+    <LinearLayout
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:orientation="horizontal"
