@@ -12,7 +12,7 @@
         android:orientation="vertical">
 
         <Spinner
-            android:id="@+id/spinner"
+            android:id="@+id/base_language"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1" />
@@ -23,8 +23,11 @@
             android:layout_height="wrap_content"
             android:layout_weight="10"
             android:ems="10"
-            android:inputType="textPersonName"
-            android:text="Name" />
+            android:text=""
+            android:inputType="textMultiLine"
+            android:minLines="1"
+            android:gravity="top|left"
+            android:maxLines="100"/>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -47,7 +50,7 @@
                 app:srcCompat="@android:drawable/ic_menu_camera" />
 
             <ImageButton
-                android:id="@+id/camera_button"
+                android:id="@+id/input_play"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -63,7 +66,7 @@
         android:text="Translate" />
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="50dp"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:layout_weight="10">
@@ -74,12 +77,21 @@
             android:layout_height="wrap_content"
             android:layout_weight="1" />
 
-        <TextView
-            android:id="@+id/translated_text"
-            android:layout_width="match_parent"
+        <ScrollView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:id="@+id/scrollView"
             android:layout_weight="10"
-            android:text="TextView" />
+            android:fillViewport="false">
+
+            <TextView
+
+                android:id="@+id/translated_text"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:minLines="1"/>
+        </ScrollView>
+
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -88,7 +100,7 @@
             android:orientation="horizontal">
 
             <ImageButton
-                android:id="@+id/play"
+                android:id="@+id/output_play"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"

@@ -1,5 +1,5 @@
 <resources>
-  <string name="app_name">Language Translation Example</string>
+  <string name="app_name">Language Translation</string>
   <string name="translation_label">Translation:</string>
   <string name="translate">translate</string>
   <string name="input_hint">enter text</string>

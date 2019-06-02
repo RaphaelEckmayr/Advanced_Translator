@@ -1,10 +1,13 @@
 package com.ibm.watson.developer_cloud.android.myapplication;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -50,13 +53,15 @@ public class MainActivity extends AppCompatActivity {
   private EditText input;
   private ImageButton mic;
   private Button translate;
-  private ImageButton play;
+  private ImageButton Outputplay;
+  private ImageButton Inputplay;
   private TextView translatedText;
   private ImageView loadedImage;
 
   private SpeechToText speechService;
   private TextToSpeech textService;
   private LanguageTranslator translationService;
+  private String selectedBaseLanguage = Language.ENGLISH;
   private String selectedTargetLanguage = Language.SPANISH;
   private String voiceLang = SynthesizeOptions.Voice.ES_ES_ENRIQUEVOICE;
 
@@ -68,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
   private MicrophoneInputStream capture;
   private boolean listening = false;
+  private Context ctx = this;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -83,19 +89,34 @@ public class MainActivity extends AppCompatActivity {
     translationService = initLanguageTranslatorService();
 
     Spinner targetLanguage = findViewById(R.id.target_language);
+    Spinner baseLanguage = findViewById(R.id.base_language);
     input = findViewById(R.id.input);
     mic = findViewById(R.id.mic);
     translate = findViewById(R.id.translate);
-    play = findViewById(R.id.play);
+    Outputplay = findViewById(R.id.output_play);
+    Inputplay = findViewById(R.id.input_play);
     translatedText = findViewById(R.id.translated_text);
     ImageButton gallery = findViewById(R.id.gallery_button);
-    ImageButton camera = findViewById(R.id.camera_button);
+    ImageButton camera = null; //findViewById(R.id.camera_button);
     loadedImage = findViewById(R.id.loaded_image);
 
     String[] langs = getResources().getStringArray(R.array.array_languages);
       Arrays.sort(langs);
     final SpinnerAdapter spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, langs);
+    baseLanguage.setAdapter(spinnerAdapter);
     targetLanguage.setAdapter(spinnerAdapter);
+
+    baseLanguage.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+      @Override
+      public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+          selectedBaseLanguage = translateLanguage(spinnerAdapter.getItem(i).toString());
+      }
+
+      @Override
+      public void onNothingSelected(AdapterView<?> adapterView) {
+
+      }
+    });
 
     targetLanguage.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
         @Override
@@ -171,19 +192,37 @@ public class MainActivity extends AppCompatActivity {
       @Override
       public void onEmpty(boolean empty) {
         if (empty) {
-          play.setEnabled(false);
+          Outputplay.setEnabled(false);
         } else {
-          play.setEnabled(true);
+          Outputplay.setEnabled(true);
         }
       }
     });
 
-    play.setEnabled(false);
+    input.addTextChangedListener(new EmptyTextWatcher() {
+      @Override
+      public void onEmpty(boolean empty) {
+        if (empty) {
+          Inputplay.setEnabled(false);
+        } else {
+          Inputplay.setEnabled(true);
+        }
+      }});
 
-    play.setOnClickListener(new View.OnClickListener() {
+    Inputplay.setEnabled(false);
+    Outputplay.setEnabled(false);
+
+    Outputplay.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
         new SynthesisTask().execute(translatedText.getText().toString());
+      }
+    });
+
+    Inputplay.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        new SynthesisTask().execute(input.getText().toString());
       }
     });
 
@@ -194,10 +233,28 @@ public class MainActivity extends AppCompatActivity {
       }
     });
 
-    camera.setOnClickListener(new View.OnClickListener() {
+    /*camera.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
         cameraHelper.dispatchTakePictureIntent();
+      }
+    });*/
+
+    input.setOnLongClickListener(new View.OnLongClickListener() {
+      @Override
+      public boolean onLongClick(View view)
+      {
+        final View dialog = getLayoutInflater().inflate(R.layout.detailed_view, null);
+        final EditText text = dialog.findViewById(R.id.detailed_text);
+        text.setText(input.getText());
+        new AlertDialog.Builder(ctx).setView(dialog)
+                .setNegativeButton("Close", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        input.setText(text.getText());
+                    }
+                });
+        return false;
       }
     });
   }
@@ -385,7 +442,7 @@ public class MainActivity extends AppCompatActivity {
     protected String doInBackground(String... params) {
       TranslateOptions translateOptions = new TranslateOptions.Builder()
               .addText(params[0])
-              .source(Language.ENGLISH)
+              .source(selectedBaseLanguage)
               .target(selectedTargetLanguage)
               .build();
       TranslationResult result = translationService.translate(translateOptions).execute();
