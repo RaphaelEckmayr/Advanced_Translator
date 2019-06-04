@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.Adapter;
 import android.widget.AdapterView;
@@ -46,6 +48,7 @@ import com.ibm.watson.developer_cloud.text_to_speech.v1.model.SynthesizeOptions;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
   private final String TAG = "MainActivity";
@@ -80,6 +83,11 @@ public class MainActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
+    Log.d("YEET MY MEAT", Resources.getSystem().getConfiguration().locale.getLanguage());
+    Log.d("YEET MY MEAT", Locale.getDefault().getDisplayLanguage());
+    Log.d("YEET MY MEAT", Locale.getDefault().getLanguage());
+    Log.d("YEET MY MEAT", Locale.getDefault().getISO3Language());
+
     cameraHelper = new CameraHelper(this);
     galleryHelper = new GalleryHelper(this);
     microphoneHelper = new MicrophoneHelper(this);
@@ -88,8 +96,8 @@ public class MainActivity extends AppCompatActivity {
     textService = initTextToSpeechService();
     translationService = initLanguageTranslatorService();
 
-    Spinner targetLanguage = findViewById(R.id.target_language);
-    Spinner baseLanguage = findViewById(R.id.base_language);
+    final Spinner targetLanguage = findViewById(R.id.target_language);
+    final Spinner baseLanguage = findViewById(R.id.base_language);
     input = findViewById(R.id.input);
     mic = findViewById(R.id.mic);
     translate = findViewById(R.id.translate);
@@ -102,14 +110,17 @@ public class MainActivity extends AppCompatActivity {
 
     String[] langs = getResources().getStringArray(R.array.array_languages);
       Arrays.sort(langs);
-    final SpinnerAdapter spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, langs);
-    baseLanguage.setAdapter(spinnerAdapter);
-    targetLanguage.setAdapter(spinnerAdapter);
+    final SpinnerAdapter targetAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, langs);
+    final SpinnerAdapter baseAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, langs);
+    baseLanguage.setAdapter(baseAdapter);
+    targetLanguage.setAdapter(targetAdapter);
+
 
     baseLanguage.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
       @Override
       public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-          selectedBaseLanguage = translateLanguage(spinnerAdapter.getItem(i).toString());
+          selectedBaseLanguage = translateLanguage(baseAdapter.getItem(i).toString());
+          translate.setEnabled(checkDuplicateSelection(baseLanguage, targetLanguage));
       }
 
       @Override
@@ -118,10 +129,13 @@ public class MainActivity extends AppCompatActivity {
       }
     });
 
+    baseLanguage.setSelection(((ArrayAdapter) baseAdapter).getPosition(Locale.getDefault().getDisplayLanguage()));
+
     targetLanguage.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-            selectedTargetLanguage = translateLanguage(spinnerAdapter.getItem(i).toString());
+            selectedTargetLanguage = translateLanguage(targetAdapter.getItem(i).toString());
+            translate.setEnabled(checkDuplicateSelection(baseLanguage, targetLanguage));
         }
 
         @Override
@@ -129,6 +143,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
     });
+
 
     input.addTextChangedListener(new EmptyTextWatcher() {
       @Override
@@ -215,14 +230,31 @@ public class MainActivity extends AppCompatActivity {
     Outputplay.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        new SynthesisTask().execute(translatedText.getText().toString());
+          setVoiceLang(selectedTargetLanguage);
+          if(voiceLang.equals(""))
+          {
+              Toast.makeText(ctx, "Voice language not supported", Toast.LENGTH_LONG).show();
+          }
+          else
+          {
+              new SynthesisTask().execute(translatedText.getText().toString());
+          }
       }
     });
 
     Inputplay.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        new SynthesisTask().execute(input.getText().toString());
+          setVoiceLang(selectedBaseLanguage);
+          Log.d("Yeet", voiceLang+ selectedBaseLanguage);
+          if(voiceLang.equals(""))
+          {
+              Toast.makeText(ctx, "Voice language not supported", Toast.LENGTH_LONG).show();
+          }
+          else
+          {
+              new SynthesisTask().execute(input.getText().toString());
+          }
       }
     });
 
@@ -240,23 +272,7 @@ public class MainActivity extends AppCompatActivity {
       }
     });*/
 
-    input.setOnLongClickListener(new View.OnLongClickListener() {
-      @Override
-      public boolean onLongClick(View view)
-      {
-        final View dialog = getLayoutInflater().inflate(R.layout.detailed_view, null);
-        final EditText text = dialog.findViewById(R.id.detailed_text);
-        text.setText(input.getText());
-        new AlertDialog.Builder(ctx).setView(dialog)
-                .setNegativeButton("Close", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        input.setText(text.getText());
-                    }
-                });
-        return false;
-      }
-    });
+
   }
 
   private String translateLanguage(String fullName)
@@ -264,7 +280,6 @@ public class MainActivity extends AppCompatActivity {
       switch(fullName.toUpperCase())
       {
           case "ENGLISH":
-              voiceLang = SynthesizeOptions.Voice.EN_US_LISAVOICE;
               return Language.ENGLISH;
 
           case "ARABIC":
@@ -280,33 +295,69 @@ public class MainActivity extends AppCompatActivity {
               return Language.DUTCH;
 
           case "FRENCH":
-              voiceLang = SynthesizeOptions.Voice.FR_FR_RENEEVOICE;
               return Language.FRENCH;
 
           case "GERMAN":
-              voiceLang = SynthesizeOptions.Voice.DE_DE_DIETERVOICE;
               return Language.GERMAN;
 
           case "ITALIAN":
-              voiceLang = SynthesizeOptions.Voice.IT_IT_FRANCESCAVOICE;
              return Language.ITALIAN;
 
           case "JAPANESE":
-              voiceLang = SynthesizeOptions.Voice.JA_JP_EMIVOICE;
               return Language.JAPANESE;
 
           case "KOREAN":
               return Language.KOREAN;
 
           case "PORTUGUESE":
-              voiceLang = SynthesizeOptions.Voice.PT_BR_ISABELAVOICE;
               return Language.PORTUGUESE;
 
           case "SPANISH":
-              voiceLang = SynthesizeOptions.Voice.ES_ES_LAURAVOICE;
               return Language.SPANISH;
       }
       return null;
+  }
+
+  private void setVoiceLang(String lang)
+  {
+      switch (lang.toLowerCase())
+      {
+          case "ENGLISH":
+              voiceLang = SynthesizeOptions.Voice.EN_US_LISAVOICE;
+              break;
+
+          case "FRENCH":
+              voiceLang = SynthesizeOptions.Voice.FR_FR_RENEEVOICE;
+              break;
+
+          case "GERMAN":
+              voiceLang = SynthesizeOptions.Voice.DE_DE_DIETERVOICE;
+              break;
+
+          case "ITALIAN":
+              voiceLang = SynthesizeOptions.Voice.IT_IT_FRANCESCAVOICE;
+              break;
+
+          case "JAPANESE":
+              voiceLang = SynthesizeOptions.Voice.JA_JP_EMIVOICE;
+              break;
+
+          case "PORTUGUESE":
+              voiceLang = SynthesizeOptions.Voice.PT_BR_ISABELAVOICE;
+              break;
+
+          case "SPANISH":
+              voiceLang = SynthesizeOptions.Voice.ES_ES_LAURAVOICE;
+              break;
+
+          default:
+              voiceLang = "";
+              break;
+      }
+  }
+
+  private boolean checkDuplicateSelection(Spinner baseLanguage, Spinner targetLanguage) {
+      return !((String) baseLanguage.getSelectedItem()).equals((String) targetLanguage.getSelectedItem());
   }
 
 
