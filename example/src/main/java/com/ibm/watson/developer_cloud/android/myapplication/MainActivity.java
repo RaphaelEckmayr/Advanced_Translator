@@ -230,7 +230,7 @@ public class MainActivity extends AppCompatActivity {
     Outputplay.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-          setVoiceLang(selectedTargetLanguage);
+          setVoiceLang(targetLanguage.getSelectedItem().toString());
           if(voiceLang.equals(""))
           {
               Toast.makeText(ctx, "Voice language not supported", Toast.LENGTH_LONG).show();
@@ -245,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
     Inputplay.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-          setVoiceLang(selectedBaseLanguage);
+          setVoiceLang(baseLanguage.getSelectedItem().toString());
           Log.d("Yeet", voiceLang+ selectedBaseLanguage);
           if(voiceLang.equals(""))
           {
@@ -320,7 +320,7 @@ public class MainActivity extends AppCompatActivity {
 
   private void setVoiceLang(String lang)
   {
-      switch (lang.toLowerCase())
+      switch (lang.toUpperCase())
       {
           case "ENGLISH":
               voiceLang = SynthesizeOptions.Voice.EN_US_LISAVOICE;
@@ -496,7 +496,8 @@ public class MainActivity extends AppCompatActivity {
               .source(selectedBaseLanguage)
               .target(selectedTargetLanguage)
               .build();
-      TranslationResult result = translationService.translate(translateOptions).execute();
+      TranslationResult result = null;
+      try{result = translationService.translate(translateOptions).execute();}catch (Exception e){}
       String firstTranslation = result.getTranslations().get(0).getTranslationOutput();
       showTranslation(firstTranslation);
       return "Did translate";
